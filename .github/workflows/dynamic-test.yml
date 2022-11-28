@@ -1,0 +1,25 @@
+name: Dynamic Test Using OWASP ZAP
+on: [push]
+
+jobs:
+  test:
+    name: OWASP ZAP 
+    runs-on: ubuntu-latest
+
+    steps:
+       - uses: actions/checkout@v3
+         with:
+          ref: master
+       - name: Building Docker Image
+         run: docker-compose build
+       - name: Launching the app
+         run: docker-compose up --detach
+
+       - name: OWASP ZAP
+         uses: zaproxy/action-baseline@v0.7.0
+         with:
+           # Target URL
+           target: "http://localhost:9090"
+           fail_action: false
+           token: $
+           issue_title: Security Tests
