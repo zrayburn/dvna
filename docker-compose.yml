@@ -8,8 +8,6 @@ services:
       dockerfile: Dockerfile-dev
     ports:
       - 9090:9090
-    expose:
-      - "9090"
     volumes:
       - .:/app
     depends_on:
