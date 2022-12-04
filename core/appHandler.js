@@ -4,10 +4,17 @@ const exec = require('child_process').exec;
 var mathjs = require('mathjs')
 var libxmljs = require("libxmljs");
 var serialize = require("node-serialize")
+var validator = require('validator');
 const Op = db.Sequelize.Op
 
 module.exports.userSearch = function (req, res) {
-	var query = "SELECT name,id FROM Users WHERE login='" + req.body.login + "'";
+	if (!validator.isAlphanumeric(req.body.login)){
+		req.flash('warning', 'No Hackers Allowed')
+		res.render('app/usersearch', {
+				output: null
+			})
+	}
+	var query = "SELECT name,id FROM Users WHERE login='" + req.body.login + "'"; // Attempt to fix SQLi
 	db.sequelize.query(query, {
 		model: db.User
 	}).then(user => {
