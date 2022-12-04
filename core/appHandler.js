@@ -43,6 +43,11 @@ module.exports.userSearch = function (req, res) {
 }
 
 module.exports.ping = function (req, res) {
+	if (!validator.isIP(req.body.address)){ // Block anything that doesn't validate as an IP
+		res.render('app/ping', {
+				output: "No Hackers!!!"
+			})
+	}
 	exec('ping -c 2 ' + req.body.address, function (err, stdout, stderr) {
 		output = stdout + stderr
 		res.render('app/ping', {
@@ -239,6 +244,9 @@ module.exports.bulkProductsLegacy = function (req,res){
 
 module.exports.bulkProducts =  function(req, res) {
 	if (req.files.products && req.files.products.mimetype=='text/xml'){
+		if (req.files.products.text().includes("<!ENTITY")) { // Block entities
+			res.render('app/bulkproducts',{messages:{danger:'Invalid file'}});
+		  }
 		var products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:true,noblanks:true})
 		products.root().childNodes().forEach( product => {
 			var newProduct = new db.Product()
