@@ -125,10 +125,11 @@ module.exports.modifyProductSubmit = function (req, res) {
 		if (!product) {
 			product = new db.Product()
 		}
-		product.code = req.body.code
-		product.name = req.body.name
-		product.description = req.body.description
-		product.tags = req.body.tags
+		// Block stored XSS in products DB
+		product.code = validator.escape(req.body.code)
+		product.name = validator.escape(req.body.name)
+		product.description = validator.escape(req.body.description)
+		product.tags = validator.escape(req.body.tags)
 		product.save().then(p => {
 			if (p) {
 				req.flash('success', 'Product added/modified!')
@@ -231,10 +232,11 @@ module.exports.bulkProductsLegacy = function (req,res){
 		var products = serialize.unserialize(req.files.products.data.toString('utf8'))
 		products.forEach( function (product) {
 			var newProduct = new db.Product()
-			newProduct.name = product.name
-			newProduct.code = product.code
-			newProduct.tags = product.tags
-			newProduct.description = product.description
+			// This endpoint would allow stored XSS as well, block
+			newProduct.name = validator.escape(product.name)
+			newProduct.code = validator.escape(product.code)
+			newProduct.tags = validator.escape(product.tags)
+			newProduct.description = validator.escape(product.description)
 			newProduct.save()
 		})
 		res.redirect('/app/products')
@@ -251,10 +253,11 @@ module.exports.bulkProducts =  function(req, res) {
 		var products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:true,noblanks:true})
 		products.root().childNodes().forEach( product => {
 			var newProduct = new db.Product()
-			newProduct.name = product.childNodes()[0].text()
-			newProduct.code = product.childNodes()[1].text()
-			newProduct.tags = product.childNodes()[2].text()
-			newProduct.description = product.childNodes()[3].text()
+			// Block stored XSS within bulk products
+			newProduct.name = validator.escape(product.childNodes()[0].text())
+			newProduct.code = validator.escape(product.childNodes()[1].text())
+			newProduct.tags = validator.escape(product.childNodes()[2].text())
+			newProduct.description = validator.escape(product.childNodes()[3].text())
 			newProduct.save()
 		})
 		res.redirect('/app/products')
