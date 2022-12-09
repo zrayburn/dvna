@@ -247,10 +247,9 @@ module.exports.bulkProductsLegacy = function (req,res){
 
 module.exports.bulkProducts =  function(req, res) {
 	if (req.files.products && req.files.products.mimetype=='text/xml'){
-		if (req.files.products.text().includes("<!ENTITY")) { // Block entities
-			res.render('app/bulkproducts',{messages:{danger:'Invalid file'}});
-		  }
-		var products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:true,noblanks:true})
+		// noent enables entity parsing? Switch to false to block XXE
+		// Ref: https://github.com/libxmljs/libxmljs/blob/23da4cf9eca569a37cc36a26977fa7ab0b53d875/src/xml_document.cc#L286
+		var products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:false,noblanks:true})
 		products.root().childNodes().forEach( product => {
 			var newProduct = new db.Product()
 			// Block stored XSS within bulk products
