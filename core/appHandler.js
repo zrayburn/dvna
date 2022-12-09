@@ -77,7 +77,8 @@ module.exports.productSearch = function (req, res) {
 	}).then(products => {
 		output = {
 			products: products,
-			searchTerm: req.body.name
+			// Block reflected XSS by escaping html tags, no SQLi possible.
+			searchTerm: validator.escape(req.body.name)
 		}
 		res.render('app/products', {
 			output: output
