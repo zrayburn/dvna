@@ -1,6 +1,7 @@
 var db = require('../models')
 var bCrypt = require('bcrypt')
 var md5 = require('md5')
+var crypto = require('crypto')
 
 module.exports.isAuthenticated = function (req, res, next) {
 	if (req.isAuthenticated()) {
@@ -24,9 +25,16 @@ module.exports.forgotPw = function (req, res) {
 			}
 		}).then(user => {
 			if (user) {
-				// Send reset link via email happens here
-				req.flash('info', 'Check email for reset link')
-				res.redirect('/login')
+				// Solution to reset token, assume this token is created whenever the resetpw email is sent.
+				// Ref: https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+				user.resetToken = crypto.randomBytes(32).toString('base64'); // Generate reset token
+				console.log(user.resetToken); // For debug
+				// :: Send reset link via email happens here ::
+				// Save user modification to the database:
+				user.save().then(function(){
+					req.flash('info', 'Check email for reset link')
+					res.redirect('/login')
+				})
 			} else {
 				req.flash('danger', "Invalid login username")
 				res.redirect('/forgotpw')
@@ -46,7 +54,7 @@ module.exports.resetPw = function (req, res) {
 			}
 		}).then(user => {
 			if (user) {
-				if (req.query.token == md5(req.query.login)) {
+				if (req.query.token == user.resetToken) {
 					res.render('resetpw', {
 						login: req.query.login,
 						token: req.query.token
@@ -75,10 +83,10 @@ module.exports.resetPwSubmit = function (req, res) {
 				}
 			}).then(user => {
 				if (user) {
-					if (req.body.token == md5(req.body.login)) {
+					if (req.body.token == user.resetToken) {
 						user.password = bCrypt.hashSync(req.body.password, bCrypt.genSaltSync(10), null)
 						user.save().then(function () {
-							req.flash('success', "Passowrd successfully reset")
+							req.flash('success', "Password successfully reset")
 							res.redirect('/login')
 						})
 					} else {
@@ -91,7 +99,7 @@ module.exports.resetPwSubmit = function (req, res) {
 				}
 			})
 		} else {
-			req.flash('danger', "Passowords do not match")
+			req.flash('danger', "Passwords do not match")
 			res.render('resetpw', {
 				login: req.query.login,
 				token: req.query.token

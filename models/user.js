@@ -24,6 +24,10 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             allowNull: false
         },
+        resetToken: { // This will be the stored secret for password resets.
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         role: {
             type: DataTypes.STRING,
             allowNull: true
