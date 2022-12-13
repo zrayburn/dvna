@@ -165,6 +165,18 @@ module.exports.userEditSubmit = function (req, res) {
 			'id': req.body.id
 		}		
 	}).then(user =>{
+		// Check if the session user id matches what they are trying to modify
+		// https://www.npmjs.com/package/passport populates req.body.id in middleware but it can be modified in post
+		if (req.session.passport.user != req.body.id){
+			req.flash('warning', 'No hackers')
+			res.render('app/useredit', {
+				userId: null,
+				userEmail: null,
+				userName: null,
+				csrfToken: req.csrfToken()
+			})
+			return
+		}
 		if(req.body.password.length>0){
 			if(req.body.password.length>0){
 				if (req.body.password == req.body.cpassword) {
@@ -205,7 +217,8 @@ module.exports.userEditSubmit = function (req, res) {
 }
 
 module.exports.redirect = function (req, res) {
-	if (req.query.url) {
+	// Super simple method, would be better with verifying it is a valid endpoint
+	if (req.query.url && validator.isAlphanumeric(req.query.url)) { 
 		res.redirect(req.query.url)
 	} else {
 		res.send('invalid redirect url')
